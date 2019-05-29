@@ -5,12 +5,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
+
 import com.rim.board.BoardDAO;
 import com.rim.board.BoardDTO;
 import com.rim.page.SearchRow;
 import com.rim.util.DBConnector;
 
-public class NoticeDAO implements BoardDAO{
+public class NoticeDAO implements BoardDAO {
 
 	@Override
 	public int getNum() throws Exception {
@@ -26,75 +27,100 @@ public class NoticeDAO implements BoardDAO{
 	}
 
 	@Override
-	public int getTotalCount(SearchRow searchRow, Connection conn) throws Exception {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public BoardDTO select(int num, Connection conn) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public List<BoardDTO> selectList(SearchRow searchRow, Connection conn) throws Exception {
-		ArrayList<BoardDTO> arr = new ArrayList<BoardDTO>();
-		NoticeDTO dto = null;
-		String sql="select * from "
-				+ "(select rownum R, n.* from "
-				+ "(select * from notice where "+searchRow.getSearch().getKind()+" like ? order by num desc) n) "
-				+ "where R between ? and ?";
-		
-		PreparedStatement pst = conn.prepareStatement(sql);
-		pst.setString(1, "%"+searchRow.getSearch().getSearch()+"%");
-		pst.setInt(2, searchRow.getStartRow());
-		pst.setInt(3, searchRow.getLastRow());
-		ResultSet rs = pst.executeQuery();
-		
-		while(rs.next()) {
-			dto = new NoticeDTO();
-			dto.setContents(rs.getString("contents"));
-			
-			dto.setReg_date(rs.getDate("reg_date"));
-			dto.setHit(rs.getInt("hit"));
-			dto.setNum(rs.getInt("num"));
-			dto.setTitle(rs.getString("title"));
-			dto.setWriter(rs.getString("writer"));
-			arr.add(dto);
-		}
-		
-		rs.close();
-		pst.close();
-		return arr;
-	}
-
-	@Override
-	public int insert(BoardDTO boardDTO, Connection conn) throws Exception {
+	public int getTotalCount(SearchRow searchRow, Connection con) throws Exception {
 		int result=0;
-		
-		String sql="insert into notice values(?,?,?,?,sysdate,0)";
-		PreparedStatement pst = conn.prepareStatement(sql);
-		pst.setInt(1, boardDTO.getNum());
-		pst.setString(2, boardDTO.getTitle());
-		pst.setString(3, boardDTO.getContents());
-		pst.setString(4, boardDTO.getWriter());
-		result = pst.executeUpdate();
-		pst.close();
+		String sql ="select count(num) from notice where "+searchRow.getSearch().getKind()+" like ?";
+		PreparedStatement st = con.prepareStatement(sql);
+		st.setString(1, "%"+searchRow.getSearch().getSearch()+"%");
+		ResultSet rs = st.executeQuery();
+		rs.next();
+		result = rs.getInt(1);
+		rs.close();
+		st.close();
 		return result;
 	}
 
 	@Override
-	public int update(BoardDTO boardDTO, Connection conn) throws Exception {
+	public List<BoardDTO> selectList(SearchRow searchRow, Connection con) throws Exception {
+		ArrayList<BoardDTO> ar = new ArrayList<BoardDTO>();
+		
+		String sql="select * from "
+				+ "(select rownum R, N.* from "
+				+ "(select num, title, writer, reg_date, hit from notice where "+searchRow.getSearch().getKind()+ " like ? order by num desc) N) "
+				+ "where R between ? and ?";
+		PreparedStatement st = con.prepareStatement(sql);
+		st.setString(1, "%"+searchRow.getSearch().getSearch()+"%");
+		st.setInt(2, searchRow.getStartRow());
+		st.setInt(3, searchRow.getLastRow());
+		ResultSet rs = st.executeQuery();
+		
+		while(rs.next()) {
+			NoticeDTO noticeDTO = new NoticeDTO();
+			noticeDTO.setNum(rs.getInt("num"));
+			noticeDTO.setTitle(rs.getString("title"));
+			noticeDTO.setWriter(rs.getString("writer"));
+			noticeDTO.setReg_date(rs.getDate("reg_date"));
+			noticeDTO.setHit(rs.getInt("hit"));
+			ar.add(noticeDTO);
+			
+		}
+		
+		rs.close();
+		st.close();
+		
+		return ar;
+	}
+
+	@Override
+	public BoardDTO select(int num, Connection con) throws Exception {
+		NoticeDTO noticeDTO= null;
+		String sql ="select * from notice where num=?";
+		PreparedStatement st = con.prepareStatement(sql);
+		st.setInt(1, num);
+		ResultSet rs = st.executeQuery();
+		if(rs.next()) {
+			noticeDTO = new NoticeDTO();
+			noticeDTO.setNum(rs.getInt("num"));
+			noticeDTO.setTitle(rs.getString("title"));
+			noticeDTO.setContents(rs.getString("contents"));
+			noticeDTO.setWriter(rs.getString("writer"));
+			noticeDTO.setReg_date(rs.getDate("reg_date"));
+			noticeDTO.setHit(rs.getInt("hit"));
+		}
+		
+		rs.close();
+		st.close();
+		
+		return noticeDTO;
+	}
+
+	@Override
+	public int insert(BoardDTO boardDTO, Connection con) throws Exception {
+int result=0;
+		
+		String sql ="insert into notice values(?,?,?,?, sysdate,0)";
+		PreparedStatement st = con.prepareStatement(sql);
+		st.setInt(1, boardDTO.getNum());
+		st.setString(2, boardDTO.getTitle());
+		st.setString(3, boardDTO.getContents());
+		st.setString(4, boardDTO.getWriter());
+		result = st.executeUpdate();
+		st.close();
+		return result;
+	}
+
+	@Override
+	public int update(BoardDTO boardDTO, Connection con) throws Exception {
 		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
-	public int delete(int num, Connection conn) throws Exception {
+	public int delete(int num, Connection con) throws Exception {
 		// TODO Auto-generated method stub
 		return 0;
 	}
-
 	
+	
+
 }

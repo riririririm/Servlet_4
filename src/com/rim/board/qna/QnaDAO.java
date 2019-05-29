@@ -15,41 +15,47 @@ public class QnaDAO implements BoardDAO {
 
 	@Override
 	public int getNum() throws Exception {
-		// TODO Auto-generated method stub
-		return 0;
+		int result=0;
+		Connection con = DBConnector.getConnection();
+		String sql ="select notice_seq.nextval from dual";
+		PreparedStatement st =con.prepareStatement(sql);
+		ResultSet rs = st.executeQuery();
+		rs.next();
+		result=rs.getInt(1);
+		DBConnector.disConnect(rs, st, con);
+		return result;
 	}
 
 	@Override
-	public int getTotalCount(SearchRow searchRow, Connection conn) throws Exception {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public BoardDTO select(int num, Connection conn) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public List<BoardDTO> selectList(SearchRow searchRow, Connection conn) throws Exception {
-		ArrayList<BoardDTO> arr = new ArrayList<BoardDTO>();
+	public int getTotalCount(SearchRow searchRow, Connection con) throws Exception {
+		int result=0;
 		
-		String sql="select * from "
+		String sql ="select count(num) from qna where "+searchRow.getSearch().getKind()+" like ?";
+		PreparedStatement st = con.prepareStatement(sql);
+		st.setString(1, "%"+searchRow.getSearch().getSearch()+"%");
+		ResultSet rs = st.executeQuery();
+		rs.next();
+		result = rs.getInt(1);
+		rs.close();
+		st.close();
+		return result;
+	}
+
+	@Override
+	public List<BoardDTO> selectList(SearchRow searchRow, Connection con) throws Exception {
+		ArrayList<BoardDTO> ar = new ArrayList<BoardDTO>();
+		
+		String sql ="select * from "
 				+ "(select rownum R, Q.* from "
 				+ "(select * from qna where "+searchRow.getSearch().getKind()+" like ? order by ref desc, step asc) Q) "
 				+ "where R between ? and ?";
-		
-		PreparedStatement pst = conn.prepareStatement(sql);
-		pst.setString(1, "%"+searchRow.getSearch().getSearch()+"%");
-		pst.setInt(2, searchRow.getStartRow());
-		pst.setInt(3, searchRow.getLastRow());
-		
-		ResultSet rs = pst.executeQuery();
-		
-		QnaDTO qnaDTO = null;
+		PreparedStatement st = con.prepareStatement(sql);
+		st.setString(1, "%"+searchRow.getSearch().getSearch()+"%");
+		st.setInt(2, searchRow.getStartRow());
+		st.setInt(3, searchRow.getLastRow());
+		ResultSet rs = st.executeQuery();
 		while(rs.next()) {
-			qnaDTO = new QnaDTO();
+			QnaDTO qnaDTO = new QnaDTO();
 			qnaDTO.setNum(rs.getInt("num"));
 			qnaDTO.setTitle(rs.getString("title"));
 			qnaDTO.setContents(rs.getString("contents"));
@@ -59,35 +65,66 @@ public class QnaDAO implements BoardDAO {
 			qnaDTO.setRef(rs.getInt("ref"));
 			qnaDTO.setStep(rs.getInt("step"));
 			qnaDTO.setDepth(rs.getInt("depth"));
-			arr.add(qnaDTO);
+			ar.add(qnaDTO);
+		}
+		rs.close();
+		st.close();
+		return ar;
+	}
+
+	@Override
+	public BoardDTO select(int num, Connection con) throws Exception {
+		QnaDTO qnaDTO= null;
+		String sql ="select * from qna where num=?";
+		PreparedStatement st = con.prepareStatement(sql);
+		st.setInt(1, num);
+		ResultSet rs = st.executeQuery();
+		if(rs.next()) {
+			qnaDTO = new QnaDTO();
+			qnaDTO.setNum(rs.getInt("num"));
+			qnaDTO.setTitle(rs.getString("title"));
+			qnaDTO.setContents(rs.getString("contents"));
+			qnaDTO.setWriter(rs.getString("writer"));
+			qnaDTO.setReg_date(rs.getDate("reg_date"));
+			qnaDTO.setHit(rs.getInt("hit"));
 		}
 		
-		DBConnector.disConnect(pst,conn);
+		rs.close();
+		st.close();
 		
-		return arr;
+		return qnaDTO;
 	}
 
 	@Override
-	public int insert(BoardDTO boardDTO, Connection conn) throws Exception {
+	public int insert(BoardDTO boardDTO, Connection con) throws Exception {
+		int result=0;
+		String sql ="insert into qna values(?,?,?,?,sysdate,0,?,0,0)";
+		PreparedStatement st = con.prepareStatement(sql);
+		st.setInt(1, boardDTO.getNum());
+		st.setString(2, boardDTO.getTitle());
+		st.setString(3, boardDTO.getContents());
+		st.setString(4, boardDTO.getWriter());
+		st.setInt(5, boardDTO.getNum());
+		result = st.executeUpdate();
+		st.close();
+		return result;
+	}
+
+	@Override
+	public int update(BoardDTO boardDTO, Connection con) throws Exception {
 		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
-	public int update(BoardDTO boardDTO, Connection conn) throws Exception {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public int delete(int num, Connection conn) throws Exception {
+	public int delete(int num, Connection con) throws Exception {
 		// TODO Auto-generated method stub
 		return 0;
 	}
 	
-	public int reply(QnaDTO qnaDTO) throws Exception {
+	public int reply(QnaDTO qnaDTO)throws Exception{
 		
-		 return 0;
+		return 0;
 	}
 
 }

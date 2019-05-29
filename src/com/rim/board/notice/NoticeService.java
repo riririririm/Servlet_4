@@ -1,7 +1,6 @@
 package com.rim.board.notice;
 
 import java.io.File;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -11,89 +10,119 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.oreilly.servlet.MultipartRequest;
-import com.oreilly.servlet.multipart.DefaultFileRenamePolicy;
 import com.rim.action.Action;
 import com.rim.action.ActionForward;
 import com.rim.board.BoardDTO;
-import com.rim.board.qna.QnaDAO;
-import com.rim.board.qna.QnaDTO;
 import com.rim.page.SearchMakePage;
 import com.rim.page.SearchPager;
 import com.rim.page.SearchRow;
 import com.rim.upload.UploadDAO;
 import com.rim.upload.UploadDTO;
 import com.rim.util.DBConnector;
+import com.oreilly.servlet.MultipartRequest;
+import com.oreilly.servlet.multipart.DefaultFileRenamePolicy;
 
 public class NoticeService implements Action {
 	private NoticeDAO noticeDAO;
 	private UploadDAO uploadDAO;
-	
+
 	public NoticeService() {
 		noticeDAO = new NoticeDAO();
 		uploadDAO = new UploadDAO();
+
 	}
+
 
 	@Override
 	public ActionForward list(HttpServletRequest request, HttpServletResponse response) {
 		ActionForward actionForward = new ActionForward();
-		
-		int curPage =1;
+
+		int curPage=1;
 		try {
-			curPage = Integer.parseInt(request.getParameter("curPage"));
-		} catch (Exception e) {
+			curPage= Integer.parseInt(request.getParameter("curPage"));
+		}catch (Exception e) {
 			// TODO: handle exception
 		}
-		
+
 		String kind = request.getParameter("kind");
 		String search = request.getParameter("search");
-		
+
+
+		/////////////////////////////////////////////////////////////
 		SearchMakePage s = new SearchMakePage(curPage, kind, search);
-		
-		
+
 		//1. row
 		SearchRow searchRow = s.makeRow();
-				
-		//page
-		int totalCount =0;
-		Connection conn = null;
+		List<BoardDTO> ar=null;
+		Connection con = null;
 		try {
-			conn = DBConnector.getConnection();
-		
-			totalCount= noticeDAO.getTotalCount(searchRow, conn);
-			List<BoardDTO> ar = noticeDAO.selectList(searchRow,conn);
-			request.setAttribute("list", ar);
-			
+			con = DBConnector.getConnection();
+			ar = noticeDAO.selectList(searchRow, con);
+			//2. page
+			int totalCount= noticeDAO.getTotalCount(searchRow, con);
 			SearchPager searchPager = s.makePage(totalCount);
+
 			request.setAttribute("pager", searchPager);
-			
+			request.setAttribute("list", ar);
 			actionForward.setCheck(true);
 			actionForward.setPath("../WEB-INF/views/board/boardList.jsp");
-			
 		} catch (Exception e) {
-			// TODO: handle exception
+			// TODO Auto-generated catch block
 			e.printStackTrace();
-			request.setAttribute("message", "server error");
+			request.setAttribute("message", "Sever Error");
 			request.setAttribute("path", "../index.do");
-		
 			actionForward.setCheck(true);
 			actionForward.setPath("../WEB-INF/views/common/result.jsp");
-		} finally {
+		}finally {
 			try {
-				conn.close();
+				con.close();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
-		
+
 		return actionForward;
 	}
 
 	@Override
 	public ActionForward select(HttpServletRequest request, HttpServletResponse response) {
-		// TODO Auto-generated method stub
-		return null;
+		ActionForward actionForward = new ActionForward();
+
+		BoardDTO boardDTO=null;
+		List<UploadDTO> ar = null;
+		Connection con = null;
+		try {
+			con = DBConnector.getConnection();
+			int num = Integer.parseInt(request.getParameter("num"));
+			boardDTO = noticeDAO.select(num, con);
+			ar = uploadDAO.selectList(num, con);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				con.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		String path="";
+		if(boardDTO != null) {
+			request.setAttribute("dto", boardDTO);
+			request.setAttribute("upload", ar);
+			path ="../WEB-INF/views/board/boardSelect.jsp";
+		}else {
+			request.setAttribute("message", "No Data");
+			request.setAttribute("path", "./noticeList");
+			path="../WEB-INF/views/common/result.jsp";
+		}
+		//글이 있으면 출력
+		//글이 없으면 삭제되었거나 없는 글입니다.(alert) 리스트로 
+		actionForward.setCheck(true);
+		actionForward.setPath(path);
+		return actionForward;
 	}
 
 	@Override
@@ -175,8 +204,8 @@ public class NoticeService implements Action {
 
 	@Override
 	public ActionForward update(HttpServletRequest request, HttpServletResponse response) {
-		// TODO Auto-generated method stub
-		return null;
+		ActionForward actionForward = new ActionForward();
+		return actionForward;
 	}
 
 	@Override
@@ -185,5 +214,4 @@ public class NoticeService implements Action {
 		return null;
 	}
 
-	
 }
