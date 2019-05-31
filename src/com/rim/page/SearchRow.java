@@ -5,7 +5,6 @@ public class SearchRow{
 	private int lastRow;
 	private Search search;
 	
-	
 	public Search getSearch() {
 		return search;
 	}

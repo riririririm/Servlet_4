@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd" id="WebApp_ID" version="4.0">
+ <context-param>
+ 	<param-name>view</param-name>
+ 	<param-value>../WEB-INF/views/</param-value>
+ </context-param>
+ 
   <servlet>
     <servlet-name>home</servlet-name>
     <servlet-class>com.rim.controller.HomeController</servlet-class>
@@ -11,6 +16,10 @@
   <servlet>
     <servlet-name>notice</servlet-name>
     <servlet-class>com.rim.controller.NoticeController</servlet-class>
+    <init-param>
+    	<param-name>board</param-name>
+    	<param-value>notice</param-value>
+    </init-param>
   </servlet>
   <servlet-mapping>
     <servlet-name>notice</servlet-name>
@@ -56,4 +65,17 @@
     <servlet-name>json</servlet-name>
     <url-pattern>/json/*</url-pattern>
   </servlet-mapping>
+ <filter>
+ 	<filter-name>encoding</filter-name>
+ 	<filter-class>com.rim.filter.EncodingFilter</filter-class>	
+ 	<init-param>
+ 		<param-name>kind</param-name>
+ 		<param-value>UTF-8</param-value>
+ 	</init-param>
+ </filter>
+ <filter-mapping>
+ 	<filter-name>encoding</filter-name>
+ 	<url-pattern>/*</url-pattern>
+ </filter-mapping>
+ 
 </web-app>

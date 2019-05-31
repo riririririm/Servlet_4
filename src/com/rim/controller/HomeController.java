@@ -9,6 +9,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.rim.member.MemberDTO;
+
 /**
  * Servlet implementation class HomeController
  */
@@ -28,6 +30,20 @@ public class HomeController extends HttpServlet {
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String s = request.getParameter("s");
+		
+		if(s!=null && s.equals("2")) {
+			MemberDTO memberDTO = new MemberDTO();
+			memberDTO.setId("admin");
+			request.getSession().setAttribute("member", memberDTO);
+		}else if(s!=null && s.equals("1")) {
+			MemberDTO memberDTO = new MemberDTO();
+			memberDTO.setId("banana");
+			request.getSession().setAttribute("member", memberDTO);
+		}else if(s!=null && s.equals("3")) {
+			request.getSession().invalidate();
+		}
+		
 		System.out.println("index");
 		RequestDispatcher view = request.getRequestDispatcher("./WEB-INF/views/index.jsp");
 		view.forward(request, response);
